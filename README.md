@@ -4,6 +4,12 @@ A Vulkan and OpenGL overlay for monitoring FPS, temperatures, CPU/GPU load and m
 
 ![Example gif showing a standard performance readout with frametimes](assets/overlay_example.gif)
 
+> **Fork note:** This fork adds **Super I/O fan support**. The `fan` element shows the
+> Steam Deck fan, and a new **`cfan`** element shows motherboard / Super I/O chip fans
+> (Nuvoton, ITE, Fintek, Winbond, SMSC) via `hwmon`, with `fan_custom_sensor` for manual
+> selection and `cfan_color` for its label color. See [`FAN_SUPERIO.md`](FAN_SUPERIO.md)
+> for full details.
+
 ---
 
 - [MangoHud](#mangohud)
