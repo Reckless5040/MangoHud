@@ -1102,12 +1102,14 @@ parse_overlay_config(struct overlay_params *params,
       params->font_scale_media_player = 0.55f;
 
    // Convert from 0xRRGGBB to ImGui's format
-   std::array<unsigned *, 24> colors = {
+   std::array<unsigned *, 26> colors = {
       &params->cpu_color,
       &params->gpu_color,
       &params->vram_color,
       &params->ram_color,
       &params->engine_color,
+      &params->fan_color,
+      &params->cfan_color,
       &params->io_color,
       &params->background_color,
       &params->frametime_color,
