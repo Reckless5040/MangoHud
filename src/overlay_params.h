@@ -101,6 +101,7 @@ struct Tracepoint;
    OVERLAY_PARAM_BOOL(fan)                           \
    OVERLAY_PARAM_BOOL(cfan)                          \
    OVERLAY_PARAM_CUSTOM(fan_custom_sensor)           \
+   OVERLAY_PARAM_CUSTOM(cfan_custom_sensor)          \
    OVERLAY_PARAM_BOOL(throttling_status)             \
    OVERLAY_PARAM_BOOL(throttling_status_graph)       \
    OVERLAY_PARAM_BOOL(fcat)                          \
@@ -346,6 +347,7 @@ struct overlay_params {
    std::string cpu_text, fps_text;
    std::map<std::string, std::string> cpu_custom_temp_sensor;
    std::vector<std::map<std::string, std::string>> fan_custom_sensor;
+   std::vector<std::map<std::string, std::string>> cfan_custom_sensor;
    std::vector<std::string> blacklist;
    unsigned autostart_log;
    std::vector<std::string> media_player_format;

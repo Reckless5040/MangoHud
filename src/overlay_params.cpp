@@ -664,6 +664,7 @@ parse_ftrace(const char *str) {
 #define parse_engine_color(s) parse_color(s)
 #define parse_fan_color(s) parse_color(s)
 #define parse_cfan_color(s) parse_color(s)
+#define parse_cfan_custom_sensor(s) parse_fan_custom_sensor(s)
 #define parse_io_color(s) parse_color(s)
 #define parse_frametime_color(s) parse_color(s)
 #define parse_background_color(s) parse_color(s)

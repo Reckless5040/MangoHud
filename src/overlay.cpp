@@ -103,7 +103,7 @@ void init_spdlog()
 void update_hw_info(const struct overlay_params& params, uint32_t vendorID)
 {
    auto real_params = get_params();
-   if (real_params->enabled[OVERLAY_PARAM_ENABLED_fan])
+   if (real_params->enabled[OVERLAY_PARAM_ENABLED_fan] || real_params->enabled[OVERLAY_PARAM_ENABLED_cfan])
       update_fan();
    if (real_params->enabled[OVERLAY_PARAM_ENABLED_cpu_stats] || logger->is_active()) {
       cpuStats.UpdateCPUData();
@@ -902,14 +902,51 @@ static string find_active_fan_input(const string& hwmon_dir){
    return "";
 }
 
+// Resolves user-configured "chip,input[,label]" entries into fan_sensor nodes
+// appended to out. Shared by the "fan" and "cfan" elements.
+static void resolve_custom_fan_sensors(
+      const std::vector<std::map<std::string, std::string>>& custom,
+      const std::vector<string>& dirs, const string& path,
+      std::vector<fan_sensor>& out, const char* default_prefix){
+   size_t idx = 1;
+   for (auto& cs : custom){
+      auto name_it = cs.find("hwmon_name");
+      auto input_it = cs.find("hwmon_input");
+      if (name_it == cs.end() || input_it == cs.end())
+         continue;
+      const string& name = name_it->second;
+      const string& input = input_it->second;
+
+      for (auto& dir : dirs) {
+         string dir_path = path + dir;
+         if (read_line(dir_path + "/name") != name)
+            continue;
+         string candidate = dir_path + "/" + input;
+         if (file_exists(candidate)){
+            fan_sensor fs;
+            fs.path = candidate;
+            auto label_it = cs.find("label");
+            if (label_it != cs.end() && !label_it->second.empty())
+               fs.label = label_it->second;
+            else
+               fs.label = custom.size() > 1 ? default_prefix + std::to_string(idx) : default_prefix;
+            out.push_back(fs);
+            SPDLOG_DEBUG("fan: using custom sensor '{}' ({})", fs.label, fs.path);
+         }
+         break;
+      }
+      idx++;
+   }
+}
+
 void update_fan(){
    // Resolves the fan sensor(s) once and caches their sysfs paths, then
    // refreshes the RPM of each every call.
    //
-   //   fan_sensors  -> "fan" element:  the Steam Deck APU fan.
-   //   cfan_sensors -> "cfan" element: custom / Super I/O chip fan(s). Uses
-   //                   fan_custom_sensor if set, otherwise auto-detects a
-   //                   Super I/O chip (nct67xx/nct6799, it87xx, etc.).
+   //   fan_sensors  -> "fan" element:  fan_custom_sensor if set, otherwise the
+   //                   Steam Deck APU fan.
+   //   cfan_sensors -> "cfan" element: cfan_custom_sensor if set, otherwise a
+   //                   auto-detected Super I/O chip (nct67xx/nct6799, it87xx, etc.).
    static bool checked = false;
 
    if (!checked){
@@ -919,52 +956,28 @@ void update_fan(){
       string path = "/sys/class/hwmon/";
       auto dirs = ls(path.c_str(), "hwmon", LS_DIRS);
 
-      // "fan": the Steam Deck APU fan.
-      for (auto& dir : dirs) {
-         string dir_path = path + dir;
-         if (read_line(dir_path + "/name").find("steamdeck_hwmon") != string::npos){
-            fan_sensor fs;
-            fs.label = "FAN";
-            fs.path = dir_path + "/fan1_input";
-            fan_sensors.push_back(fs);
-            SPDLOG_DEBUG("fan: using Steam Deck sensor ({})", fs.path);
-            break;
+      // "fan": fan_custom_sensor if set, otherwise the Steam Deck APU fan.
+      auto fan_custom = get_params()->fan_custom_sensor;
+      if (!fan_custom.empty()){
+         resolve_custom_fan_sensors(fan_custom, dirs, path, fan_sensors, "FAN");
+      } else {
+         for (auto& dir : dirs) {
+            string dir_path = path + dir;
+            if (read_line(dir_path + "/name").find("steamdeck_hwmon") != string::npos){
+               fan_sensor fs;
+               fs.label = "FAN";
+               fs.path = dir_path + "/fan1_input";
+               fan_sensors.push_back(fs);
+               SPDLOG_DEBUG("fan: using Steam Deck sensor ({})", fs.path);
+               break;
+            }
          }
       }
 
-      // "cfan": custom / Super I/O chip fan(s).
-      auto custom = get_params()->fan_custom_sensor;
-      if (!custom.empty()){
-         // User explicitly picked one or more chip+input pairs.
-         size_t idx = 1;
-         for (auto& cs : custom){
-            auto name_it = cs.find("hwmon_name");
-            auto input_it = cs.find("hwmon_input");
-            if (name_it == cs.end() || input_it == cs.end())
-               continue;
-            const string& name = name_it->second;
-            const string& input = input_it->second;
-
-            for (auto& dir : dirs) {
-               string dir_path = path + dir;
-               if (read_line(dir_path + "/name") != name)
-                  continue;
-               string candidate = dir_path + "/" + input;
-               if (file_exists(candidate)){
-                  fan_sensor fs;
-                  fs.path = candidate;
-                  auto label_it = cs.find("label");
-                  if (label_it != cs.end() && !label_it->second.empty())
-                     fs.label = label_it->second;
-                  else
-                     fs.label = custom.size() > 1 ? "CFAN" + std::to_string(idx) : "CFAN";
-                  cfan_sensors.push_back(fs);
-                  SPDLOG_DEBUG("cfan: using sensor '{}' ({})", fs.label, fs.path);
-               }
-               break;
-            }
-            idx++;
-         }
+      // "cfan": cfan_custom_sensor if set, otherwise a Super I/O chip.
+      auto cfan_custom = get_params()->cfan_custom_sensor;
+      if (!cfan_custom.empty()){
+         resolve_custom_fan_sensors(cfan_custom, dirs, path, cfan_sensors, "CFAN");
       } else {
          // Auto-detect a single Super I/O fan.
          static const std::vector<string> superio_prefixes = {

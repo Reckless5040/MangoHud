@@ -6,7 +6,7 @@ A Vulkan and OpenGL overlay for monitoring FPS, temperatures, CPU/GPU load and m
 
 > **Fork note:** This fork adds **Super I/O fan support**. The `fan` element shows the
 > Steam Deck fan, and a new **`cfan`** element shows motherboard / Super I/O chip fans
-> (Nuvoton, ITE, Fintek, Winbond, SMSC) via `hwmon`, with `fan_custom_sensor` for manual
+> (Nuvoton, ITE, Fintek, Winbond, SMSC) via `hwmon`, with `cfan_custom_sensor` for manual
 > selection and `cfan_color` for its label color. See [`FAN_SUPERIO.md`](FAN_SUPERIO.md)
 > for full details.
 
@@ -383,9 +383,10 @@ Parameters that are enabled by default have to be explicitly disabled. These (cu
 | `engine_version`                   | Display OpenGL or vulkan and vulkan-based render engine's version                     |
 | `exec`                             | Display output of bash command in next column, e.g. `custom_text=/home` , `exec=df -h /home \| tail -n 1`. Only works with `legacy_layout=0` |
 | `exec_name`                        | Display current exec name                                                             |
-| `fan`                              | Shows the Steam Deck fan rpm. |
-| `cfan`                             | Shows custom / Super I/O fan rpm. Auto-detects a Super I/O chip (e.g. nct6799) and picks the first spinning fan, or uses `fan_custom_sensor` if set. |
-| `fan_custom_sensor`                | Selects the hwmon sensor(s) used by `cfan`. One or more `chip,input[,label]` entries separated by `;`. e.g `fan_custom_sensor=nct6799,fan2_input` or `fan_custom_sensor=nct6799,fan2_input,CPU;nct6799,fan7_input,GPU`. |
+| `fan`                              | Shows fan rpm. Auto-detects the Steam Deck fan, or uses `fan_custom_sensor` if set. |
+| `fan_custom_sensor`                | Selects the hwmon sensor(s) used by `fan`. One or more `chip,input[,label]` entries separated by `;`. e.g `fan_custom_sensor=nct6799,fan2_input` or `fan_custom_sensor=nct6799,fan2_input,CPU;nct6799,fan7_input,GPU`. |
+| `cfan`                             | Shows custom / Super I/O fan rpm. Auto-detects a Super I/O chip (e.g. nct6799) and picks the first spinning fan, or uses `cfan_custom_sensor` if set. |
+| `cfan_custom_sensor`                | Selects the hwmon sensor(s) used by `cfan`. Same `chip,input[,label]` format as `fan_custom_sensor`, separated by `;`. e.g `cfan_custom_sensor=nct6799,fan2_input,RAD;nct6799,fan4_input,BTM`. |
 | `fcat`                             | Enables frame capture analysis                                                        |
 | `fcat_overlay_width=`              | Sets the width of fcat. Default is `24`                                               |
 | `fcat_screen_edge=`                | Decides the edge fcat is displayed on. A value between `1` and `4`                    |

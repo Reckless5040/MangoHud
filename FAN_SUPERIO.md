@@ -30,15 +30,16 @@ the original **`fan`** element for the Steam Deck fan.
 |------|----------|-----------|
 | `fan` element | Steam Deck only | Steam Deck only (unchanged) |
 | `cfan` element | n/a | **New** — auto-detected Super I/O chip fan |
-| Sensor selection | n/a | New `fan_custom_sensor` option to pick exact chip + input(s) for `cfan` |
-| Multiple fans | n/a | Multiple labelled fans on `cfan` via `fan_custom_sensor` |
+| Sensor selection | n/a | New `cfan_custom_sensor` option to pick exact chip + input(s) for `cfan` |
+| Multiple fans | n/a | Multiple labelled fans on `cfan` via `cfan_custom_sensor` |
 
 ### Touched source files
 - `src/overlay.cpp` — `find_active_fan_input()` helper and the rewritten `update_fan()`,
   which now fills two lists: `fan_sensors` (Steam Deck) and `cfan_sensors`
   (custom / Super I/O).
 - `src/overlay_params.cpp` / `.h` — the `cfan` boolean element plus the
-  `fan_custom_sensor` parameter and its parser (`parse_fan_custom_sensor`).
+  `fan_custom_sensor` / `cfan_custom_sensor` parameters and their shared parser
+  (`parse_fan_custom_sensor`).
 - `src/hud_elements.cpp` / `.h`, `src/overlay.h` — `HudElements::cfan()` render function
   and overlay plumbing for the resolved fan(s).
 
@@ -58,13 +59,20 @@ Two independent elements — enable either or both:
 Each element has its own label color, e.g. `cfan_color=00ff00` (defaults to the same
 `eb5b5b` as `fan_color`).
 
-### 1. Steam Deck fan
+### 1. The `fan` element
 
 ```ini
 fan
 ```
 
-Reads the Steam Deck's `steamdeck_hwmon` sensor. No effect on other hardware.
+By default reads the Steam Deck's `steamdeck_hwmon` sensor. On other hardware you can
+point it at any hwmon sensor with `fan_custom_sensor` (same format as
+`cfan_custom_sensor`, described below):
+
+```ini
+fan
+fan_custom_sensor=nct6799,fan7_input,CPU
+```
 
 ### 2. Super I/O auto-detect (desktops)
 
@@ -89,17 +97,17 @@ Within that chip it picks the **first spinning fan** — the lowest-numbered
 
 > **Caveat:** auto-detect only finds one fan, and only one that is *already spinning*
 > when the overlay starts. If the fan you want is idle at launch, or you have several
-> fans, use `fan_custom_sensor` below.
+> fans, use `cfan_custom_sensor` below.
 
 ### 3. Manual selection for `cfan` (recommended for desktops / multi-fan)
 
 ```ini
 cfan
 # single fan
-fan_custom_sensor=nct6799,fan2_input
+cfan_custom_sensor=nct6799,fan2_input
 
 # multiple fans, with labels
-fan_custom_sensor=nct6799,fan2_input,CPU;nct6799,fan7_input,GPU
+cfan_custom_sensor=nct6799,fan2_input,CPU;nct6799,fan7_input,GPU
 ```
 
 Format — one or more entries separated by `;`:
@@ -113,7 +121,7 @@ chip,input[,label]
 - **label** — optional display label. Defaults to `FAN` for a single sensor, or
   `FAN1`, `FAN2`, … when several are configured.
 
-When `fan_custom_sensor` is set, auto-detection is skipped and one overlay entry is
+When `cfan_custom_sensor` is set, auto-detection is skipped and one overlay entry is
 created per configured sensor.
 
 ---
@@ -133,7 +141,7 @@ done
 ```
 
 Use the printed `name` as **chip** and the `fanN_input` filename as **input** in
-`fan_custom_sensor`.
+`cfan_custom_sensor`.
 
 If no Super I/O chip shows up, load the right kernel module (e.g.
 `sudo modprobe nct6775` for Nuvoton) — and run `sudo sensors-detect` from
@@ -147,6 +155,6 @@ If no Super I/O chip shows up, load the right kernel module (e.g.
   `update_fan()` emits `fan: using ...` / `cfan: using ...` / `fan: no fan sensor found`
   via `SPDLOG_DEBUG` (build/run with debug logging enabled).
 - **Wrong fan picked:** auto-detect grabbed the first spinning fan — switch to an
-  explicit `fan_custom_sensor`.
+  explicit `cfan_custom_sensor`.
 - **RPM reads `-1`:** the sysfs path returned empty or non-numeric; double-check the
   exact `fanN_input` filename for that chip.
