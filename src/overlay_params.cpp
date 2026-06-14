@@ -663,6 +663,7 @@ parse_ftrace(const char *str) {
 #define parse_ram_color(s) parse_color(s)
 #define parse_engine_color(s) parse_color(s)
 #define parse_fan_color(s) parse_color(s)
+#define parse_cfan_color(s) parse_color(s)
 #define parse_io_color(s) parse_color(s)
 #define parse_frametime_color(s) parse_color(s)
 #define parse_background_color(s) parse_color(s)
@@ -945,6 +946,7 @@ static void set_param_defaults(struct overlay_params *params){
    params->ram_color = 0xc26693;
    params->engine_color = 0xeb5b5b;
    params->fan_color = 0xeb5b5b;
+   params->cfan_color = 0xeb5b5b;
    params->io_color = 0xa491d3;
    params->frametime_color = 0x00ff00;
    params->background_color = 0x020202;

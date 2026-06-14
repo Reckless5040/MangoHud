@@ -50,10 +50,13 @@ Config lives in `~/.config/MangoHud/MangoHud.conf`.
 
 Two independent elements — enable either or both:
 
-| Element | Source | Label |
-|---------|--------|-------|
-| `fan`   | Steam Deck APU fan (`steamdeck_hwmon` → `fan1_input`) | `FAN` |
-| `cfan`  | Custom / Super I/O chip fan(s) | `CFAN` (or your label) |
+| Element | Source | Label | Label color |
+|---------|--------|-------|-------------|
+| `fan`   | Steam Deck APU fan (`steamdeck_hwmon` → `fan1_input`) | `FAN` | `fan_color` |
+| `cfan`  | Custom / Super I/O chip fan(s) | `CFAN` (or your label) | `cfan_color` |
+
+Each element has its own label color, e.g. `cfan_color=00ff00` (defaults to the same
+`eb5b5b` as `fan_color`).
 
 ### 1. Steam Deck fan
 

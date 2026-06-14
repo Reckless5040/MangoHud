@@ -171,6 +171,7 @@ void HudElements::convert_colors(const struct overlay_params& params)
     HUDElements.colors.ram = convert(params.ram_color);
     HUDElements.colors.engine = convert(params.engine_color);
     HUDElements.colors.fan = convert(params.fan_color);
+    HUDElements.colors.cfan = convert(params.cfan_color);
     HUDElements.colors.io = convert(params.io_color);
     HUDElements.colors.frametime = convert(params.frametime_color);
     HUDElements.colors.background = convert(params.background_color);
@@ -1498,7 +1499,7 @@ void HudElements::cfan(){
             ImGui::TableNextRow();
         first = false;
         ImguiNextColumnFirstItem();
-        HUDElements.TextColored(HUDElements.colors.fan, "%s", s.label.c_str());
+        HUDElements.TextColored(HUDElements.colors.cfan, "%s", s.label.c_str());
         ImguiNextColumnOrNewRow();
         right_aligned_text(HUDElements.colors.text,HUDElements.ralign_width, "%i", s.rpm);
         ImGui::SameLine(0, 1.0f);

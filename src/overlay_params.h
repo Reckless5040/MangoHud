@@ -183,6 +183,7 @@ struct Tracepoint;
    OVERLAY_PARAM_CUSTOM(ram_color)                   \
    OVERLAY_PARAM_CUSTOM(engine_color)                \
    OVERLAY_PARAM_CUSTOM(fan_color)                   \
+   OVERLAY_PARAM_CUSTOM(cfan_color)                  \
    OVERLAY_PARAM_CUSTOM(frametime_color)             \
    OVERLAY_PARAM_CUSTOM(background_color)            \
    OVERLAY_PARAM_CUSTOM(io_color)                    \
@@ -313,7 +314,7 @@ struct overlay_params {
    bool gl_dont_flip {false};
    int64_t log_duration, log_interval;
    unsigned cpu_color, gpu_color, vram_color, ram_color,
-            engine_color, fan_color, io_color, frametime_color, background_color,
+            engine_color, fan_color, cfan_color, io_color, frametime_color, background_color,
             text_color, wine_color, battery_color, network_color,
             horizontal_separator_color;
    std::vector<unsigned> gpu_load_color;
