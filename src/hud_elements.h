@@ -129,6 +129,7 @@ class HudElements{
                 ram,
                 swap,
                 engine,
+                fan,
                 io,
                 frametime,
                 background,

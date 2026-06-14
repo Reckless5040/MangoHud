@@ -377,7 +377,8 @@ Parameters that are enabled by default have to be explicitly disabled. These (cu
 | `engine_version`                   | Display OpenGL or vulkan and vulkan-based render engine's version                     |
 | `exec`                             | Display output of bash command in next column, e.g. `custom_text=/home` , `exec=df -h /home \| tail -n 1`. Only works with `legacy_layout=0` |
 | `exec_name`                        | Display current exec name                                                             |
-| `fan`                              | Shows the Steam Deck fan rpm                                                          |
+| `fan`                              | Shows fan rpm. Auto-detects the Steam Deck fan or a Super I/O chip (e.g. nct6799). Picks the first spinning fan by default. |
+| `fan_custom_sensor`                | Use custom hwmon sensor(s) for fan rpm. One or more `chip,input[,label]` entries separated by `;`. e.g `fan_custom_sensor=nct6799,fan2_input` or `fan_custom_sensor=nct6799,fan2_input,CPU;nct6799,fan7_input,GPU`. |
 | `fcat`                             | Enables frame capture analysis                                                        |
 | `fcat_overlay_width=`              | Sets the width of fcat. Default is `24`                                               |
 | `fcat_screen_edge=`                | Decides the edge fcat is displayed on. A value between `1` and `4`                    |
@@ -407,7 +408,7 @@ Parameters that are enabled by default have to be explicitly disabled. These (cu
 | `refresh_rate`                     | Display the current refresh rate (only works in gamescope)                            |
 | `full`                             | Enable most of the toggleable parameters (currently excludes `histogram`)             |
 | `gamemode`                         | Show if GameMode is on                                                                |
-| `gpu_color`<br>`cpu_color`<br>`vram_color`<br>`ram_color`<br>`io_color`<br>`engine_color`<br>`frametime_color`<br>`background_color`<br>`text_color`<br>`media_player_color`<br>`network_color`         | Change default colors: `gpu_color=RRGGBB` |
+| `gpu_color`<br>`cpu_color`<br>`vram_color`<br>`ram_color`<br>`io_color`<br>`engine_color`<br>`fan_color`<br>`frametime_color`<br>`background_color`<br>`text_color`<br>`media_player_color`<br>`network_color`         | Change default colors: `gpu_color=RRGGBB` |
 | `gpu_core_clock`<br>`gpu_mem_clock`| Display GPU core/memory frequency                                                     |
 | `gpu_fan`                          | GPU fan in RPM, except NVIDIA where it is a percentage |
 | `gpu_load_change`                  | Change the color of the GPU load depending on load                                    |
