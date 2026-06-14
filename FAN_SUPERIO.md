@@ -18,8 +18,9 @@ Stock MangoHud can only show two kinds of fan:
 
 It has no way to read the **motherboard fan headers** (CPU fan, case fans, etc.).
 On a desktop those are wired to a Super I/O chip (Nuvoton, ITE, Fintek, …) which the
-kernel exposes through `hwmon`. This fork teaches the existing `fan` element to read
-those chips, with optional manual sensor selection for multi-fan boards.
+kernel exposes through `hwmon`. This fork adds a dedicated **`cfan`** element that reads
+those chips, with optional manual sensor selection for multi-fan boards, while leaving
+the original **`fan`** element for the Steam Deck fan.
 
 ---
 
@@ -27,17 +28,19 @@ those chips, with optional manual sensor selection for multi-fan boards.
 
 | Area | Upstream | This fork |
 |------|----------|-----------|
-| `fan` element | Steam Deck only | Steam Deck **and** auto-detected Super I/O chip |
-| Sensor selection | n/a | New `fan_custom_sensor` option to pick exact chip + input(s) |
-| Multiple fans | n/a | Multiple labelled fans via `fan_custom_sensor` |
+| `fan` element | Steam Deck only | Steam Deck only (unchanged) |
+| `cfan` element | n/a | **New** — auto-detected Super I/O chip fan |
+| Sensor selection | n/a | New `fan_custom_sensor` option to pick exact chip + input(s) for `cfan` |
+| Multiple fans | n/a | Multiple labelled fans on `cfan` via `fan_custom_sensor` |
 
 ### Touched source files
-- `src/overlay.cpp` — `find_active_fan_input()` helper and the rewritten `update_fan()`
-  auto-detection (Steam Deck → Super I/O).
-- `src/overlay_params.cpp` / `.h` — `fan_custom_sensor` parameter and its parser
-  (`parse_fan_custom_sensor`).
-- `src/hud_elements.cpp` / `.h`, `src/overlay.h` — overlay plumbing for rendering the
-  resolved fan(s).
+- `src/overlay.cpp` — `find_active_fan_input()` helper and the rewritten `update_fan()`,
+  which now fills two lists: `fan_sensors` (Steam Deck) and `cfan_sensors`
+  (custom / Super I/O).
+- `src/overlay_params.cpp` / `.h` — the `cfan` boolean element plus the
+  `fan_custom_sensor` parameter and its parser (`parse_fan_custom_sensor`).
+- `src/hud_elements.cpp` / `.h`, `src/overlay.h` — `HudElements::cfan()` render function
+  and overlay plumbing for the resolved fan(s).
 
 ---
 
@@ -45,36 +48,50 @@ those chips, with optional manual sensor selection for multi-fan boards.
 
 Config lives in `~/.config/MangoHud/MangoHud.conf`.
 
-### 1. Auto-detect (simple case)
+Two independent elements — enable either or both:
+
+| Element | Source | Label |
+|---------|--------|-------|
+| `fan`   | Steam Deck APU fan (`steamdeck_hwmon` → `fan1_input`) | `FAN` |
+| `cfan`  | Custom / Super I/O chip fan(s) | `CFAN` (or your label) |
+
+### 1. Steam Deck fan
 
 ```ini
 fan
 ```
 
+Reads the Steam Deck's `steamdeck_hwmon` sensor. No effect on other hardware.
+
+### 2. Super I/O auto-detect (desktops)
+
+```ini
+cfan
+```
+
 `update_fan()` resolves the sensor **once** on first frame, then refreshes its RPM
-every update. Auto-detect order:
+every update. `cfan` auto-detect picks the first hwmon whose `name` starts with a known
+Super I/O prefix:
 
-1. **Steam Deck** — an hwmon named `steamdeck_hwmon` (uses `fan1_input`).
-2. **Super I/O** — the first hwmon whose `name` starts with a known prefix:
+| Vendor   | Prefixes matched                        |
+|----------|-----------------------------------------|
+| Nuvoton  | `nct61`, `nct67`, `nct77` (incl. nct6799) |
+| ITE      | `it86`, `it87`                          |
+| Fintek   | `f7188`, `f8000`                        |
+| Winbond  | `w836`, `w8362`, `w8377`                |
+| SMSC     | `smsc`, `sch311`                        |
 
-   | Vendor   | Prefixes matched                        |
-   |----------|-----------------------------------------|
-   | Nuvoton  | `nct61`, `nct67`, `nct77` (incl. nct6799) |
-   | ITE      | `it86`, `it87`                          |
-   | Fintek   | `f7188`, `f8000`                        |
-   | Winbond  | `w836`, `w8362`, `w8377`                |
-   | SMSC     | `smsc`, `sch311`                        |
-
-   Within that chip it picks the **first spinning fan** — the lowest-numbered
-   `fanN_input` reporting a nonzero RPM (`find_active_fan_input()`).
+Within that chip it picks the **first spinning fan** — the lowest-numbered
+`fanN_input` reporting a nonzero RPM (`find_active_fan_input()`).
 
 > **Caveat:** auto-detect only finds one fan, and only one that is *already spinning*
 > when the overlay starts. If the fan you want is idle at launch, or you have several
 > fans, use `fan_custom_sensor` below.
 
-### 2. Manual selection (recommended for desktops / multi-fan)
+### 3. Manual selection for `cfan` (recommended for desktops / multi-fan)
 
 ```ini
+cfan
 # single fan
 fan_custom_sensor=nct6799,fan2_input
 
@@ -123,9 +140,9 @@ If no Super I/O chip shows up, load the right kernel module (e.g.
 
 ## Troubleshooting
 
-- **Nothing shows:** run with `MANGOHUD_CONFIG=fan` and check the debug log —
-  `update_fan()` emits `fan: using ...` / `fan: no fan sensor found` via `SPDLOG_DEBUG`
-  (build/run with debug logging enabled).
+- **Nothing shows:** run with `MANGOHUD_CONFIG=cfan` (or `fan`) and check the debug log —
+  `update_fan()` emits `fan: using ...` / `cfan: using ...` / `fan: no fan sensor found`
+  via `SPDLOG_DEBUG` (build/run with debug logging enabled).
 - **Wrong fan picked:** auto-detect grabbed the first spinning fan — switch to an
   explicit `fan_custom_sensor`.
 - **RPM reads `-1`:** the sysfs path returned empty or non-numeric; double-check the

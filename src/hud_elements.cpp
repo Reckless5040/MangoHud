@@ -1484,6 +1484,30 @@ void HudElements::fan(){
     }
 }
 
+void HudElements::cfan(){
+    if (!HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_cfan])
+        return;
+
+    bool first = true;
+    for (auto& s : cfan_sensors) {
+        if (s.rpm < 0)
+            continue;
+        // The render loop gives this element one row; start a fresh row for
+        // each additional fan so labels don't spill into trailing columns.
+        if (!first && !HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_horizontal])
+            ImGui::TableNextRow();
+        first = false;
+        ImguiNextColumnFirstItem();
+        HUDElements.TextColored(HUDElements.colors.fan, "%s", s.label.c_str());
+        ImguiNextColumnOrNewRow();
+        right_aligned_text(HUDElements.colors.text,HUDElements.ralign_width, "%i", s.rpm);
+        ImGui::SameLine(0, 1.0f);
+        ImGui::PushFont(HUDElements.sw_stats->font_small);
+        HUDElements.TextColored(HUDElements.colors.text, "RPM");
+        ImGui::PopFont();
+    }
+}
+
 void HudElements::throttling_status(){
     if (HUDElements.params->enabled[OVERLAY_PARAM_ENABLED_throttling_status] && gpus){
         auto gpu = gpus->active_gpu();
@@ -2000,6 +2024,7 @@ void HudElements::sort_elements(const std::pair<std::string, std::string>& optio
         {"device_battery", {device_battery}},
         {"frame_count", {frame_count}},
         {"fan", {fan}},
+        {"cfan", {cfan}},
         {"throttling_status", {throttling_status}},
         {"exec_name", {exec_name}},
         {"duration", {duration}},
@@ -2080,6 +2105,8 @@ void HudElements::legacy_elements(const overlay_params* temp_params){
         ordered_functions.push_back({battery, "battery", value});
     if (temp_params->enabled[OVERLAY_PARAM_ENABLED_fan])
         ordered_functions.push_back({fan, "fan", value});
+    if (temp_params->enabled[OVERLAY_PARAM_ENABLED_cfan])
+        ordered_functions.push_back({cfan, "cfan", value});
     if (temp_params->enabled[OVERLAY_PARAM_ENABLED_fsr])
         ordered_functions.push_back({gamescope_fsr, "gamescope_fsr", value});
     if (temp_params->enabled[OVERLAY_PARAM_ENABLED_hdr])

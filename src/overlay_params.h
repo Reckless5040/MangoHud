@@ -99,6 +99,7 @@ struct Tracepoint;
    OVERLAY_PARAM_BOOL(device_battery_icon)           \
    OVERLAY_PARAM_BOOL(hide_fsr_sharpness)            \
    OVERLAY_PARAM_BOOL(fan)                           \
+   OVERLAY_PARAM_BOOL(cfan)                          \
    OVERLAY_PARAM_CUSTOM(fan_custom_sensor)           \
    OVERLAY_PARAM_BOOL(throttling_status)             \
    OVERLAY_PARAM_BOOL(throttling_status_graph)       \

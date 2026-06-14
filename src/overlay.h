@@ -151,7 +151,8 @@ struct fan_sensor {
    std::string path;  // resolved hwmon sysfs path (e.g. .../fanN_input)
    int rpm = -1;      // last read value; -1 means unavailable
 };
-extern std::vector<fan_sensor> fan_sensors;
+extern std::vector<fan_sensor> fan_sensors;   // "fan": Steam Deck APU fan
+extern std::vector<fan_sensor> cfan_sensors;  // "cfan": custom / Super I/O fan(s)
 extern int current_preset;
 extern std::vector<float> frametime_data;
 
